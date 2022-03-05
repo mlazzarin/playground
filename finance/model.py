@@ -2,6 +2,8 @@
 Author: Marco Lazzarin
 Description: Deep learning model from "Deep learning for portfolio optimization"
 """
+# pylint: disable=import-error
+# pylint: disable=no-name-in-module
 
 # Libraries
 from tensorflow.keras.models import Sequential
