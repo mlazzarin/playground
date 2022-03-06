@@ -6,6 +6,8 @@ Description: Deep learning model from "Deep learning for portfolio optimization"
 # pylint: disable=no-name-in-module
 
 # Libraries
+import matplotlib.pyplot as plt
+from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input, LSTM, TimeDistributed
 
@@ -44,8 +46,32 @@ class PortfolioOptimizer():
         self.model.compile(loss=sharpe, optimizer="adam", metrics=[portfolio_returns])
         self.model.summary()
 
-    def fit(self, epochs=100):
+    def fit(self, epochs=1000):
         """Fit the deep learning model."""
+
+        early_stopping = EarlyStopping(monitor="val_loss",
+                                       patience=30,
+                                       restore_best_weights=True)
         self.history = self.model.fit(self.train_set, self.train_returns,
                                       validation_data=(self.valid_set, self.valid_returns),
-                                      epochs=epochs)
+                                      epochs=epochs, callbacks=[early_stopping])
+
+    def plot(self):
+        """Various plot to analise the results."""
+
+        # Plot training history
+        fig, axes = plt.subplots(2, 1, figsize=(12, 5))
+        axes[0].grid()
+        axes[0].plot(self.history.history["loss"], label='Training set')
+        axes[0].plot(self.history.history["val_loss"], label='Validation set')
+        # axes[0].set_xlabel("Epochs")
+        axes[0].set_ylabel("Sharpe ratio")
+        # axes[0].legend()
+        axes[1].grid()
+        axes[1].plot(self.history.history["portfolio_returns"], label='Training set')
+        axes[1].plot(self.history.history["val_portfolio_returns"], label='Validation set')
+        axes[1].set_xlabel("Epochs")
+        axes[1].set_ylabel("Portfolio returns")
+        axes[1].legend()
+        fig.savefig('history.png', dpi=300, bbox_inches='tight')
+        plt.close()

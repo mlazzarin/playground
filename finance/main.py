@@ -58,6 +58,7 @@ def main():
     model = PortfolioOptimizer(data)
     model.build()
     model.fit()
+    model.plot()
 
 if __name__ == "__main__":
     main()
