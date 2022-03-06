@@ -6,6 +6,7 @@ Description: Deep learning model from "Deep learning for portfolio optimization"
 # pylint: disable=no-name-in-module
 
 # Libraries
+import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.models import Sequential
@@ -22,6 +23,7 @@ class PortfolioOptimizer():
         """Initialize data members"""
 
         # Train-valid-test split
+        self.data      = data
         sequences_len  = data.shape[1]
         self.train_set = data[:, :sequences_len//2, :]
         self.valid_set = data[:, sequences_len//2:3*sequences_len//4, :]
@@ -55,12 +57,13 @@ class PortfolioOptimizer():
         self.history = self.model.fit(self.train_set, self.train_returns,
                                       validation_data=(self.valid_set, self.valid_returns),
                                       epochs=epochs, callbacks=[early_stopping])
+        self.model.evaluate(self.test_set, self.test_returns)
 
     def plot(self):
         """Various plot to analise the results."""
 
         # Plot training history
-        fig, axes = plt.subplots(2, 1, figsize=(12, 5))
+        fig, axes = plt.subplots(2, 1, figsize=(12, 8))
         axes[0].grid()
         axes[0].plot(self.history.history["loss"], label='Training set')
         axes[0].plot(self.history.history["val_loss"], label='Validation set')
@@ -75,3 +78,31 @@ class PortfolioOptimizer():
         axes[1].legend()
         fig.savefig('history.png', dpi=300, bbox_inches='tight')
         plt.close()
+
+
+        # Compute overall gain / loss
+        prediction = self.model.predict(self.data)
+        prediction = np.squeeze(prediction)
+        equity     = self.data[0, :, 1::2] * prediction
+        equity     = np.sum(equity, axis=1)
+        equity     = np.cumsum(equity)
+
+        # Plot allocations and gain/loss
+        fig, axes = plt.subplots(2, 1, figsize=(12, 8))
+        axes[0].plot(self.data[0, :, 0] / self.data[0, 0, 0] - 1, label="VTI")
+        axes[0].plot(self.data[0, :, 2] / self.data[0, 0, 2] - 1, label="AGG")
+        axes[0].plot(self.data[0, :, 4] / self.data[0, 0, 4] - 1, label="DBC")
+        axes[0].plot(self.data[0, :, 6] / self.data[0, 0, 6] - 1, label="VIX")
+        axes[0].plot(equity,  label="Portfolio", color='k', ls='--')
+        axes[0].title.set_text("Gain / loss")
+        # axes[0].set_xlabel("Time step")
+        axes[0].set_ylabel("Gain / loss")
+        axes[0].legend()
+        axes[1].plot(prediction[:, 0], label="VTI")
+        axes[1].plot(prediction[:, 1], label="AGG")
+        axes[1].plot(prediction[:, 2], label="DBC")
+        axes[1].plot(prediction[:, 3], label="VIX")
+        axes[1].title.set_text("Allocations")
+        axes[1].set_xlabel("Time step")
+        axes[1].set_ylabel("Portfolio weight")
+        fig.savefig('allocations.png')
