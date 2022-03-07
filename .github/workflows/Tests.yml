@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
-        pip install pylint
+        pip install pylint pytest
     - name: Test with pylint
       run: |
         pylint finance -d R0801
