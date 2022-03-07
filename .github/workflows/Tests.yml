@@ -19,8 +19,8 @@ jobs:
         pip install pylint
     - name: Test with pylint
       run: |
-        pylint finance
+        pylint finance -d R0801
     - name: Test with pytest
       run: |
         cd finance
-        pytest test.py -d R0801
+        pytest test.py
