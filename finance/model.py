@@ -12,7 +12,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input, LSTM, TimeDistributed
 
-from metrics import sharpe, portfolio_returns
+from metrics import sharpe, portfolio_returns, portfolio_evolution
 
 
 class PortfolioOptimizer():
@@ -52,7 +52,7 @@ class PortfolioOptimizer():
         """Fit the deep learning model."""
 
         early_stopping = EarlyStopping(monitor="val_loss",
-                                       patience=30,
+                                       patience=50,
                                        restore_best_weights=True)
         self.history = self.model.fit(self.train_set, self.train_returns,
                                       validation_data=(self.valid_set, self.valid_returns),
@@ -83,9 +83,8 @@ class PortfolioOptimizer():
         # Compute overall gain / loss
         prediction = self.model.predict(self.data)
         prediction = np.squeeze(prediction)
-        equity     = self.data[0, :, 1::2] * prediction
-        equity     = np.sum(equity, axis=1)
-        equity     = np.cumsum(equity)
+        port_ev    = portfolio_evolution(self.data[0, :, 1::2], prediction)
+
 
         # Plot allocations and gain/loss
         fig, axes = plt.subplots(2, 1, figsize=(12, 8))
@@ -93,7 +92,7 @@ class PortfolioOptimizer():
         axes[0].plot(self.data[0, :, 2] / self.data[0, 0, 2] - 1, label="AGG")
         axes[0].plot(self.data[0, :, 4] / self.data[0, 0, 4] - 1, label="DBC")
         axes[0].plot(self.data[0, :, 6] / self.data[0, 0, 6] - 1, label="VIX")
-        axes[0].plot(equity,  label="Portfolio", color='k', ls='--')
+        axes[0].plot(port_ev, label="Portfolio", color='k', ls='--')
         axes[0].title.set_text("Gain / loss")
         # axes[0].set_xlabel("Time step")
         axes[0].set_ylabel("Gain / loss")

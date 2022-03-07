@@ -18,7 +18,8 @@ def sharpe(y_true, y_pred):
     """
 
     # Compute realized portfolio returns (eq. 3 and below from the original paper)
-    port_re = tf.reduce_sum(tf.multiply(y_true, y_pred), axis=2) # sum over assets
+    # sum over assets
+    port_re = tf.reduce_sum(tf.multiply(y_true[:, 1:, :], y_pred[:, :-1, :]), axis=2)
 
     # Compute loss function (eq. 1 from the original paper)
     mean, variance = tf.nn.moments(port_re, axes=1)
@@ -38,7 +39,26 @@ def portfolio_returns(y_true, y_pred):
     """
 
     # Compute realized portfolio returns (eq. 3 and below from the original paper)
-    port_re = tf.reduce_sum(tf.multiply(y_true, y_pred), axis=2) # sum over assets
-    port_re = tf.reduce_sum(port_re, axis=1) # sum over time steps
+    # sum over assets
+    port_re = tf.reduce_sum(tf.multiply(y_true[:, 1:, :], y_pred[:, :-1, :]), axis=2)
+    port_re = port_re + 1.0
+    port_re = tf.reduce_prod(port_re, axis=1) - 1.0 # sum over time steps
 
     return port_re
+
+def portfolio_evolution(returns, allocations):
+    """
+    Compute the evolution of the portfolio value.
+    Expect input of shape (time steps, n_assets)
+
+    Args:
+        returns: asset returns
+        allocations: allocation weights
+    """
+
+    # sum over assets
+    port_ev = tf.reduce_sum(tf.multiply(returns[1:, :], allocations[:-1, :]), axis=1)
+    port_ev = port_ev + 1.0
+    port_ev = tf.math.cumprod(port_ev, axis=0) - 1.0 # sum over time steps
+
+    return port_ev

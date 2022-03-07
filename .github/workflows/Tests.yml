@@ -20,3 +20,7 @@ jobs:
     - name: Test with pylint
       run: |
         pylint finance
+    - name: Test with pytest
+      run: |
+        cd finance
+        pytest test.py -d R0801
