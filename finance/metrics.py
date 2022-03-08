@@ -4,6 +4,7 @@ Description: Custom metrics and losses for "Deep learning for portfolio optimiza
 """
 
 # Libraries
+import numpy as np
 import tensorflow as tf
 
 
@@ -75,5 +76,6 @@ def portfolio_evolution(returns, allocations):
     port_ev = tf.reduce_sum(tf.multiply(returns[1:, :], allocations[:-1, :]), axis=1)
     port_ev = port_ev + 1.0
     port_ev = tf.math.cumprod(port_ev, axis=0) - 1.0 # sum over time steps
+    port_ev = np.concatenate(([0.0], port_ev), axis=0) # first step is 0
 
     return port_ev

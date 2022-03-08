@@ -42,39 +42,12 @@ class PortfolioOptimizer(ABC):
         self.model      = None
 
     @abstractmethod
-    def build(self):
-        """Build the deep learning model."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def fit(self, epochs):
-        """Fit the model to the dataset."""
-        raise NotImplementedError
-
-    @abstractmethod
     def predict(self, data):
         """Predict asset allocation."""
         raise NotImplementedError
 
     def plot(self):
         """Various plot to analise the results."""
-
-        # Plot training history
-        fig, axes = plt.subplots(2, 1, figsize=(12, 8))
-        axes[0].grid()
-        axes[0].plot(self.history["loss"], label='Training set')
-        axes[0].plot(self.history["val_loss"], label='Validation set')
-        # axes[0].set_xlabel("Epochs")
-        axes[0].set_ylabel("Sharpe ratio")
-        # axes[0].legend()
-        axes[1].grid()
-        axes[1].plot(self.history["portfolio_returns"], label='Training set')
-        axes[1].plot(self.history["val_portfolio_returns"], label='Validation set')
-        axes[1].set_xlabel("Epochs")
-        axes[1].set_ylabel("Portfolio returns")
-        axes[1].legend()
-        fig.savefig('history.png', dpi=300, bbox_inches='tight')
-        plt.close()
 
         # Compute overall gain / loss
         prediction = self.predict(self.data)
@@ -119,6 +92,35 @@ class PortfolioOptimizer(ABC):
         fig.savefig('returns.png', dpi=300, bbox_inches='tight')
 
 
+class ReallocationStrategy(PortfolioOptimizer):
+    """Reallocation strategy for portfolio optimization"""
+
+    def __init__(self, data, allocations, reallocation_rate=365):
+        """Save data members"""
+        super().__init__(data)
+        assert isinstance(allocations, list)
+        assert len(allocations) == self.n_features // 2
+        assert np.sum(allocations) == 1
+        self.allocations = allocations
+        self.reallocation_rate = reallocation_rate
+
+    def predict(self, data):
+        """Predict asset allocations"""
+        # pylint: disable=line-too-long
+
+        predictions = np.zeros(data[:, :, 1::2].shape)
+        for timestep in range(data.shape[1]):
+
+            # Reallocation condition
+            if timestep % self.reallocation_rate == 0:
+                predictions[:, timestep] = self.allocations
+            # Compute portfolio shift
+            else:
+                predictions[:, timestep] = predictions[:, timestep-1] * (data[:, timestep, 1::2] + 1) / \
+                                           np.sum(predictions[:, timestep-1, :] * (data[:, timestep, 1::2] + 1), axis=-1)
+
+        return predictions
+
 class DeepLearningOptimizer(PortfolioOptimizer):
     """Deep learning model for portfolio optimization"""
 
@@ -149,3 +151,26 @@ class DeepLearningOptimizer(PortfolioOptimizer):
     def predict(self, data):
         """Predict asset allocation."""
         return self.model.predict(data)
+
+    def plot(self):
+        """Various plot to analise the results."""
+
+        # Plot training history
+        fig, axes = plt.subplots(2, 1, figsize=(12, 8))
+        axes[0].grid()
+        axes[0].plot(self.history["loss"], label='Training set')
+        axes[0].plot(self.history["val_loss"], label='Validation set')
+        # axes[0].set_xlabel("Epochs")
+        axes[0].set_ylabel("Sharpe ratio")
+        # axes[0].legend()
+        axes[1].grid()
+        axes[1].plot(self.history["portfolio_returns"], label='Training set')
+        axes[1].plot(self.history["val_portfolio_returns"], label='Validation set')
+        axes[1].set_xlabel("Epochs")
+        axes[1].set_ylabel("Portfolio returns")
+        axes[1].legend()
+        fig.savefig('history.png', dpi=300, bbox_inches='tight')
+        plt.close()
+
+        # Call parent method
+        super().plot()
