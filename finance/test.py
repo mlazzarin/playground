@@ -53,7 +53,8 @@ def test_portfolio_returns_annualized(target_asset):
 
     # Compare the portfolio return with historical data
     port_re = portfolio_returns_annualized(data[:, :, 1::2], allocations)
-    ground_truth = (data[0, -1, 2*target_asset] / data[0, 0, 2*target_asset]) ** (365.0 / (data.shape[1]-1)) - 1.0
+    ground_truth = (data[0, -1, 2*target_asset] / data[0, 0, 2*target_asset]) \
+                   ** (365.0 / (data.shape[1]-1)) - 1.0
     np.testing.assert_allclose(port_re, ground_truth, atol=1e-10, rtol=1e-10)
 
 
