@@ -19,6 +19,7 @@ from metrics import portfolio_returns_annualized, sharpe, portfolio_returns, por
 
 class PortfolioOptimizer(ABC):
     """Abstract portfolio optimizer"""
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, data):
         """Initialize data members"""
@@ -43,17 +44,17 @@ class PortfolioOptimizer(ABC):
     @abstractmethod
     def build(self):
         """Build the deep learning model."""
-        raise(NotImplementedError)
+        raise NotImplementedError
 
     @abstractmethod
-    def fit(self):
+    def fit(self, epochs):
         """Fit the model to the dataset."""
-        raise(NotImplementedError)
+        raise NotImplementedError
 
     @abstractmethod
     def predict(self, data):
         """Predict asset allocation."""
-        raise(NotImplementedError)
+        raise NotImplementedError
 
     def plot(self):
         """Various plot to analise the results."""
@@ -120,7 +121,6 @@ class PortfolioOptimizer(ABC):
 
 class DeepLearningOptimizer(PortfolioOptimizer):
     """Deep learning model for portfolio optimization"""
-    # pylint: disable=too-many-instance-attributes
 
     def build(self):
         """Build the deep learning model."""
