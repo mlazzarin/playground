@@ -16,7 +16,7 @@ import numpy as np
 import tensorflow as tf
 
 from data import load_data
-from model import PortfolioOptimizer
+from model import DeepLearningOptimizer
 
 # https://keras.io/getting_started/faq/
 # The below is necessary for starting Numpy generated random numbers
@@ -55,7 +55,7 @@ def main():
 
     # ----- BUILD AND TRAIN MODEL -----
 
-    model = PortfolioOptimizer(data)
+    model = DeepLearningOptimizer(data)
     model.build()
     model.fit()
     model.plot()
