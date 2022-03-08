@@ -20,7 +20,7 @@ def test_portfolio_returns(target_asset):
     data = np.concatenate((load_data("data/VTI.csv", ["Close"]),
                            load_data("data/AGG.csv", ["Close"]),
                            load_data("data/DBC.csv", ["Close"]),
-                           load_data("data/VIX.csv", ["Close"])), axis=1)
+                           load_data("data/SGOL.csv", ["Close"])), axis=1)
     data = np.squeeze(data)
     data = data.reshape(1, *data.shape) # reshape the data to expose the batch size (one)
 
@@ -43,7 +43,7 @@ def test_portfolio_returns_annualized(target_asset):
     data = np.concatenate((load_data("data/VTI.csv", ["Close"]),
                            load_data("data/AGG.csv", ["Close"]),
                            load_data("data/DBC.csv", ["Close"]),
-                           load_data("data/VIX.csv", ["Close"])), axis=1)
+                           load_data("data/SGOL.csv", ["Close"])), axis=1)
     data = np.squeeze(data)
     data = data.reshape(1, *data.shape) # reshape the data to expose the batch size (one)
 
@@ -67,7 +67,7 @@ def test_portfolio_evolution(target_asset):
     data = np.concatenate((load_data("data/VTI.csv", ["Close"]),
                            load_data("data/AGG.csv", ["Close"]),
                            load_data("data/DBC.csv", ["Close"]),
-                           load_data("data/VIX.csv", ["Close"])), axis=1)
+                           load_data("data/SGOL.csv", ["Close"])), axis=1)
     data = np.squeeze(data)
 
     # Allocate everything into the target asset

@@ -53,12 +53,16 @@ class PortfolioOptimizer():
         """Fit the deep learning model."""
 
         early_stopping = EarlyStopping(monitor="val_loss",
-                                       patience=50,
+                                       patience=100,
                                        restore_best_weights=True)
         self.history = self.model.fit(self.train_set, self.train_returns,
                                       validation_data=(self.valid_set, self.valid_returns),
                                       epochs=epochs, callbacks=[early_stopping])
-        self.model.evaluate(self.test_set, self.test_returns)
+        test_results = self.model.evaluate(self.test_set, self.test_returns)
+        print(f"\n\n ==] Test Sharpe ratio: {test_results[0]}")
+        print(f" ==] Test return: {test_results[1]}")
+        print(f" ==] Test annualized return: {test_results[2]}")
+
 
     def plot(self):
         """Various plot to analise the results."""
@@ -87,12 +91,12 @@ class PortfolioOptimizer():
         port_ev    = portfolio_evolution(self.data[0, :, 1::2], prediction)
 
 
-        # Plot allocations and gain/loss
+        # Plot allocations and gain/loss on the whole dataset
         fig, axes = plt.subplots(2, 1, figsize=(12, 8))
         axes[0].plot(self.data[0, :, 0] / self.data[0, 0, 0] - 1, label="VTI")
         axes[0].plot(self.data[0, :, 2] / self.data[0, 0, 2] - 1, label="AGG")
         axes[0].plot(self.data[0, :, 4] / self.data[0, 0, 4] - 1, label="DBC")
-        axes[0].plot(self.data[0, :, 6] / self.data[0, 0, 6] - 1, label="VIX")
+        axes[0].plot(self.data[0, :, 6] / self.data[0, 0, 6] - 1, label="SGOL")
         axes[0].plot(port_ev, label="Portfolio", color='k', ls='--')
         axes[0].title.set_text("Gain / loss")
         # axes[0].set_xlabel("Time step")
@@ -101,8 +105,26 @@ class PortfolioOptimizer():
         axes[1].plot(prediction[:, 0], label="VTI")
         axes[1].plot(prediction[:, 1], label="AGG")
         axes[1].plot(prediction[:, 2], label="DBC")
-        axes[1].plot(prediction[:, 3], label="VIX")
+        axes[1].plot(prediction[:, 3], label="SGOL")
         axes[1].title.set_text("Allocations")
         axes[1].set_xlabel("Time step")
         axes[1].set_ylabel("Portfolio weight")
-        fig.savefig('allocations.png')
+        fig.savefig('allocations.png', dpi=300, bbox_inches='tight')
+
+
+        # Plot gain/loss on training / validation / test set independently
+        fig, axes = plt.subplots(3, 1, figsize=(16, 9))
+        for index, data in enumerate((self.train_set, self.valid_set, self.test_set)):
+            axes[index].plot(data[0, :, 0] / data[0, 0, 0] - 1, label="VTI")
+            axes[index].plot(data[0, :, 2] / data[0, 0, 2] - 1, label="AGG")
+            axes[index].plot(data[0, :, 4] / data[0, 0, 4] - 1, label="DBC")
+            axes[index].plot(data[0, :, 6] / data[0, 0, 6] - 1, label="SGOL")
+            prediction = self.model.predict(data)
+            prediction = np.squeeze(prediction)
+            port_ev    = portfolio_evolution(data[0, :, 1::2], prediction)
+            axes[index].plot(port_ev, label="Portfolio", color='k', ls='--')
+            axes[index].title.set_text("Gain / loss")
+            axes[index].set_ylabel("Gain / loss")
+        axes[2].set_xlabel("Time step")
+        axes[2].legend()
+        fig.savefig('returns.png', dpi=300, bbox_inches='tight')

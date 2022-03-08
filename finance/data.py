@@ -9,7 +9,7 @@ import pandas as pd
 
 
 def load_data(filename, columns, add_returns=True,
-              start_date="03/01/2011", end_date="03/01/2018"):
+              start_date="03/01/2010", end_date="03/01/2021"):
     """Load data from a CSV file and return a NumPy array
 
     Args:
