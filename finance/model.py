@@ -12,7 +12,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input, LSTM, TimeDistributed
 
-from metrics import sharpe, portfolio_returns, portfolio_evolution
+from metrics import portfolio_returns_annualized, sharpe, portfolio_returns, portfolio_evolution
 
 
 class PortfolioOptimizer():
@@ -45,7 +45,8 @@ class PortfolioOptimizer():
         self.model.add(Input(shape=(None, self.n_features)))
         self.model.add(LSTM(64, return_sequences=True))
         self.model.add(TimeDistributed(Dense(4, activation="softmax")))
-        self.model.compile(loss=sharpe, optimizer="adam", metrics=[portfolio_returns])
+        self.model.compile(loss=sharpe, optimizer="adam",
+                           metrics=[portfolio_returns, portfolio_returns_annualized])
         self.model.summary()
 
     def fit(self, epochs=1000):

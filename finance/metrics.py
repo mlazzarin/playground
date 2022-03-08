@@ -46,6 +46,21 @@ def portfolio_returns(y_true, y_pred):
 
     return port_re
 
+
+def portfolio_returns_annualized(y_true, y_pred):
+    """
+    Annualized portfolio return.
+    Expects input of shape (batch_size, time steps, n_assets).
+
+    Args:
+        y_true: asset returns
+        y_pred: allocation weights
+    """
+
+    port_re = portfolio_returns(y_true, y_pred)
+    return (port_re + 1.0) ** (365.0 / (y_true.shape[1]-1)) - 1
+
+
 def portfolio_evolution(returns, allocations):
     """
     Compute the evolution of the portfolio value.
