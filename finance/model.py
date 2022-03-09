@@ -7,6 +7,7 @@ Description: Deep learning model from "Deep learning for portfolio optimization"
 
 # Libraries
 from abc import ABC, abstractmethod
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -46,8 +47,16 @@ class PortfolioOptimizer(ABC):
         """Predict asset allocation."""
         raise NotImplementedError
 
-    def plot(self):
+    @abstractmethod
+    def evaluate(self):
+        """Evaluate the model on provided data."""
+        raise NotImplementedError
+
+    def plot(self, folder="plots"):
         """Various plot to analise the results."""
+
+        # Create folder
+        os.makedirs(folder, exist_ok=True)
 
         # Compute overall gain / loss
         prediction = self.predict(self.data)
@@ -72,7 +81,7 @@ class PortfolioOptimizer(ABC):
         axes[1].title.set_text("Allocations")
         axes[1].set_xlabel("Time step")
         axes[1].set_ylabel("Portfolio weight")
-        fig.savefig('allocations.png', dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(folder, 'allocations.png'), dpi=300, bbox_inches='tight')
 
         # Plot gain/loss on training / validation / test set independently
         fig, axes = plt.subplots(3, 1, figsize=(16, 9))
@@ -89,7 +98,7 @@ class PortfolioOptimizer(ABC):
             axes[index].set_ylabel("Gain / loss")
         axes[2].set_xlabel("Time step")
         axes[2].legend()
-        fig.savefig('returns.png', dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(folder, 'returns.png'), dpi=300, bbox_inches='tight')
 
 
 class ReallocationStrategy(PortfolioOptimizer):
@@ -121,6 +130,16 @@ class ReallocationStrategy(PortfolioOptimizer):
 
         return predictions
 
+    def evaluate(self):
+        """Evaluate the model on the test data."""
+        predictions  = self.predict(self.test_set)
+        sharpe_ratio = sharpe(self.test_returns, predictions)
+        returns      = portfolio_returns(self.test_returns, predictions)
+        ann_returns  = portfolio_returns_annualized(self.test_returns, predictions)
+        print(f"\n\n ==] Test Sharpe ratio: {sharpe_ratio}")
+        print(f" ==] Test return: {returns}")
+        print(f" ==] Test annualized return: {ann_returns}")
+
 class DeepLearningOptimizer(PortfolioOptimizer):
     """Deep learning model for portfolio optimization"""
 
@@ -128,7 +147,8 @@ class DeepLearningOptimizer(PortfolioOptimizer):
         """Build the deep learning model."""
         self.model = Sequential()
         self.model.add(Input(shape=(None, self.n_features)))
-        self.model.add(LSTM(64, return_sequences=True))
+        self.model.add(LSTM(32, return_sequences=True))
+        self.model.add(LSTM(32, return_sequences=True))
         self.model.add(TimeDistributed(Dense(4, activation="softmax")))
         self.model.compile(loss=sharpe, optimizer="adam",
                            metrics=[portfolio_returns, portfolio_returns_annualized])
@@ -143,17 +163,23 @@ class DeepLearningOptimizer(PortfolioOptimizer):
         self.history = self.model.fit(self.train_set, self.train_returns,
                                       validation_data=(self.valid_set, self.valid_returns),
                                       epochs=epochs, callbacks=[early_stopping]).history
-        test_results = self.model.evaluate(self.test_set, self.test_returns)
-        print(f"\n\n ==] Test Sharpe ratio: {test_results[0]}")
-        print(f" ==] Test return: {test_results[1]}")
-        print(f" ==] Test annualized return: {test_results[2]}")
 
     def predict(self, data):
         """Predict asset allocation."""
         return self.model.predict(data)
 
-    def plot(self):
+    def evaluate(self):
+        """Evaluate the model on the test data."""
+        test_results = self.model.evaluate(self.test_set, self.test_returns)
+        print(f"\n\n ==] Test Sharpe ratio: {test_results[0]}")
+        print(f" ==] Test return: {test_results[1]}")
+        print(f" ==] Test annualized return: {test_results[2]}")
+
+    def plot(self, folder="deep_learning"):
         """Various plot to analise the results."""
+
+        # Call parent method
+        super().plot(folder=folder)
 
         # Plot training history
         fig, axes = plt.subplots(2, 1, figsize=(12, 8))
@@ -169,8 +195,5 @@ class DeepLearningOptimizer(PortfolioOptimizer):
         axes[1].set_xlabel("Epochs")
         axes[1].set_ylabel("Portfolio returns")
         axes[1].legend()
-        fig.savefig('history.png', dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(folder, 'history.png'), dpi=300, bbox_inches='tight')
         plt.close()
-
-        # Call parent method
-        super().plot()

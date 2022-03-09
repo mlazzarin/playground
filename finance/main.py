@@ -16,7 +16,7 @@ import numpy as np
 import tensorflow as tf
 
 from data import load_data
-from model import DeepLearningOptimizer
+from model import DeepLearningOptimizer, ReallocationStrategy
 
 # https://keras.io/getting_started/faq/
 # The below is necessary for starting Numpy generated random numbers
@@ -58,7 +58,14 @@ def main():
     model = DeepLearningOptimizer(data)
     model.build()
     model.fit()
-    model.plot()
+    model.evaluate()
+    model.plot(folder="deep_learning")
+
+    model = ReallocationStrategy(data, [0.6, 0.2, 0.1, 0.1])
+    #model.build()
+    #model.fit()
+    model.evaluate()
+    model.plot(folder="reallocation")
 
 if __name__ == "__main__":
     main()
