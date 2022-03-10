@@ -77,5 +77,5 @@ def test_portfolio_evolution(target_asset):
     # Compare the portfolio evolution with historical data
     port_ev = portfolio_evolution(data[:, 1::2], allocations)
     ground_truth = data[:, 2*target_asset] / data[0, 2*target_asset] - 1.0
-    np.testing.assert_allclose(port_ev, ground_truth[1:], atol=1e-10, rtol=1e-10)
+    np.testing.assert_allclose(port_ev, ground_truth, atol=1e-10, rtol=1e-10)
     
