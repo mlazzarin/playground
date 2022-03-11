@@ -143,7 +143,7 @@ class ReallocationStrategy(PortfolioOptimizer):
 class DeepLearningOptimizer(PortfolioOptimizer):
     """Deep learning model for portfolio optimization"""
 
-    def build(self, architecture=[32, 32]):
+    def build(self, architecture=(32, 32)):
         """Build the deep learning model."""
         self.model = Sequential()
         self.model.add(Input(shape=(None, self.n_features)))
