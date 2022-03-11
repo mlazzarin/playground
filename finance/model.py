@@ -143,12 +143,12 @@ class ReallocationStrategy(PortfolioOptimizer):
 class DeepLearningOptimizer(PortfolioOptimizer):
     """Deep learning model for portfolio optimization"""
 
-    def build(self):
+    def build(self, architecture=[32, 32]):
         """Build the deep learning model."""
         self.model = Sequential()
         self.model.add(Input(shape=(None, self.n_features)))
-        self.model.add(LSTM(32, return_sequences=True))
-        self.model.add(LSTM(32, return_sequences=True))
+        for units in architecture:
+            self.model.add(LSTM(units, return_sequences=True))
         self.model.add(TimeDistributed(Dense(4, activation="softmax")))
         self.model.compile(loss=sharpe, optimizer="adam",
                            metrics=[portfolio_returns, portfolio_returns_annualized])
